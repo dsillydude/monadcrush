@@ -19,8 +19,8 @@ export async function GET(req: NextRequest) {
       splashImageUrl: `${appUrl}/images/monad-crush-splash.png`,
       splashBackgroundColor: "#f7f7f7",
       webhookUrl: `${appUrl}/api/webhook`,
-      subtitle: "Find your perfect match through code, vibes, and a little onchain fate.",
-      description: "Monad Crush is a unique Farcaster Mini App that helps you find your Monad soulmate. Answer fun questions about your Monad preferences and discover your perfect match in the Monad ecosystem. Engage with on-chain actions and connect with like-minded Monad community members.",
+      subtitle: "Find your onchain match.",
+      description: "Monad Crush helps you find your perfect Monad match. Answer fun questions and connect with like-minded developers in the Monad ecosystem.",
       primaryCategory: "games",
       screenshotUrls: [
         `${appUrl}/images/screenshot1.png`
