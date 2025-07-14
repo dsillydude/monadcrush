@@ -6,9 +6,9 @@ export async function GET(req: NextRequest) {
   const farcasterConfig = {
     // accountAssociation details are required to associated the published app with it's author
     accountAssociation: {
-      "header": "",
-      "payload": "",
-      "signature": ""
+      "header": "eyJmaWQiOjEwNTE4NTksInR5cGUiOiJhdXRoIiwia2V5IjoiMHg2NkY5MzA5OEI5ODc0MGY4MjhDZTgwOTk1ZTMwZDI0RGU1YzIwZGIzIn0",
+      "payload": "eyJkb21haW4iOiJtb25hZGNydXNoLnZlcmNlbC5hcHAifQ",
+      "signature": "3qTErx0eLxZAzhqMavbpuVDeaMnwrkW05O6Bvgw/1Ak7kjfYPUbHRa+R6psxmd81vTiPkMkn4sgweBAKsiFuYBw="
     },
     frame: {
       version: "1",
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       screenshotUrls: [], // Visual previews of the app
       tags: ["monad", "farcaster", "miniapp", "dating", "game", "crush"], // Descriptive tags for search
       primaryCategory: "games",
-      buttonTitle: "Find Your MonCrush 💘",
+      buttonTitle: "Find Your MonCrush",
       splashImageUrl: `${appUrl}/images/splash.png`, // URL of image to show on loading screen.
       splashBackgroundColor: "#6B46C1", // Hex color code to use on loading screen.
     }
