@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { NFTMinting } from '@/components/NFTMinting'
+import { MONTransfer } from '@/components/MONTransfer'
 
 interface Question {
   id: number
@@ -454,11 +455,6 @@ export default function Home() {
     // This will be handled by the NFTMinting component
   }
 
-  const handleSendMON = () => {
-    const claimCode = Math.floor(1000 + Math.random() * 9000) // Generate 4-digit code
-    alert(`MON sending - Claim code: ${claimCode}. Your crush can use this code to claim MON tokens!`)
-  }
-
   if (gameState === 'intro') {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 space-y-8 bg-gradient-to-br from-purple-900 to-pink-900 text-white">
@@ -635,13 +631,15 @@ export default function Home() {
               />
             </div>
             
-            <button
-              onClick={handleSendMON}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-full text-sm transition-all duration-200"
-            >
-              💜 Send MON
-              <div className="text-xs opacity-75">To Crush</div>
-            </button>
+            <div className="space-y-2">
+              <MONTransfer 
+                match={match} 
+                onSuccess={(claimCode) => {
+                  // Could add success handling here
+                  console.log('MON sent with claim code:', claimCode)
+                }}
+              />
+            </div>
           </div>
         </div>
 
