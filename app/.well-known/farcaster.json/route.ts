@@ -5,9 +5,9 @@ export async function GET(req: NextRequest) {
 
   const farcasterConfig = {
     accountAssociation: {
-      header: "eyJmaWQiOjEwNTE4NTksInR5cGUiOiJhdXRoIiwia2V5IjoiMHg2NkY5MzA5OEI5ODc0MGY4MjhDZTgwOTk1ZTMwZDI0RGU1YzIwZGIzIn0",
+      header: "eyJmaWQiOjEwNTE4NTksInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg2RjNDNzFmYzhDRGQxMTQ2OTIzMzQ2NTMyNTNhNDgxY0I5YjFlMDRmIn0",
       payload: "eyJkb21haW4iOiJtb25hZGNydXNoLnZlcmNlbC5hcHAifQ",
-      signature: "3qTErx0eLxZAzhqMavbpuVDeaMnwrkW05O6Bvgw/1Ak7kjfYPUbHRa+R6psxmd81vTiPkMkn4sgweBAKsiFuYBw="
+      signature: "MHg2NGM4NTlmYjk0Zjk2YjM5YmRmMjA3ZWE1NmQ3YTJkM2U3YjEzMDBlNGEzNjliMGUxZTU4MmZhZGI5NzEwN2FiMjIxNjY2NGQyNDkwZmQ3YmU2MjFlYTFhYWU0ZGQ4OWExMTQ3OTg3ODQyMDc0NGMyNjUxMTQ3NjE5OWNiM2UwZjFi"
     },
     frame: {
       name: "Monad Crush",
