@@ -3,6 +3,9 @@ import { APP_URL } from "../../../lib/constants";
 
 export async function GET() {
   const farcasterConfig = {
+    accountAssociation: {
+      
+    },
     // TODO: Add account association
     frame: {
       version: "1",
