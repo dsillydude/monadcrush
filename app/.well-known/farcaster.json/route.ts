@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       ogTitle: "Find Your Onchain Soulmate",
       ogDescription: "Discover your perfect match in the Monad ecosystem with this fun Farcaster Mini App.",
       ogImageUrl: `${appUrl}/images/monad-crush-og.png`,
-      castShareUrl: `https://warpcast.com/~compose?text=Check%20out%20Monad%20Crush%20on%20Farcaster!%20Find%20your%20onchain%20soulmate!%20${appUrl}`
+      castShareUrl: `${appUrl}/share` // ✅ FIXED: Must match homeUrl domain
     }
   }
 
