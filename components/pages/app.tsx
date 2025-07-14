@@ -45,6 +45,260 @@ interface Match {
   username: string
   compatibility: number
   reason: string
+  avatar: string
+  interests: string[]
+}
+
+interface PersonalityProfile {
+  technical: number    // 0-100: How technical/developer-focused
+  community: number    // 0-100: How community/social-focused  
+  innovation: number   // 0-100: How innovation/future-focused
+  humor: number       // 0-100: How humor/meme-focused
+}
+
+// Diverse pool of potential matches with personality profiles
+const matchPool = [
+  {
+    username: "monad_dev",
+    avatar: "👨‍💻",
+    interests: ["DeFi", "Smart Contracts", "Parallel Execution"],
+    personality: { technical: 95, community: 60, innovation: 85, humor: 40 }
+  },
+  {
+    username: "crypto_queen",
+    avatar: "👑",
+    interests: ["NFTs", "Community Building", "Memes"],
+    personality: { technical: 30, community: 95, innovation: 70, humor: 90 }
+  },
+  {
+    username: "blockchain_bae",
+    avatar: "💎",
+    interests: ["Trading", "Technology", "Innovation"],
+    personality: { technical: 75, community: 50, innovation: 90, humor: 60 }
+  },
+  {
+    username: "defi_darling",
+    avatar: "🌟",
+    interests: ["DeFi", "Yield Farming", "Community"],
+    personality: { technical: 80, community: 85, innovation: 75, humor: 55 }
+  },
+  {
+    username: "web3_wizard",
+    avatar: "🧙‍♂️",
+    interests: ["dApps", "Smart Contracts", "Future Tech"],
+    personality: { technical: 90, community: 40, innovation: 95, humor: 70 }
+  },
+  {
+    username: "nft_ninja",
+    avatar: "🥷",
+    interests: ["NFTs", "Art", "Community"],
+    personality: { technical: 45, community: 80, innovation: 85, humor: 75 }
+  },
+  {
+    username: "monad_memer",
+    avatar: "😂",
+    interests: ["Memes", "Community", "Fun"],
+    personality: { technical: 25, community: 90, innovation: 60, humor: 95 }
+  },
+  {
+    username: "parallel_prince",
+    avatar: "⚡",
+    interests: ["Performance", "Scaling", "Technology"],
+    personality: { technical: 85, community: 55, innovation: 80, humor: 45 }
+  },
+  {
+    username: "chain_charmer",
+    avatar: "✨",
+    interests: ["Interoperability", "Innovation", "Community"],
+    personality: { technical: 70, community: 75, innovation: 90, humor: 65 }
+  },
+  {
+    username: "gas_goddess",
+    avatar: "⛽",
+    interests: ["Efficiency", "Optimization", "DeFi"],
+    personality: { technical: 80, community: 60, innovation: 75, humor: 50 }
+  }
+]
+
+// Calculate personality profile based on user answers
+function calculatePersonalityProfile(answers: number[]): PersonalityProfile {
+  let technical = 0
+  let community = 0
+  let innovation = 0
+  let humor = 0
+
+  // Question 1: What you love about Monad
+  switch (answers[0]) {
+    case 0: // Parallel execution model
+      technical += 40
+      innovation += 35
+      break
+    case 1: // EVM compatibility with performance
+      technical += 35
+      innovation += 30
+      break
+    case 2: // Developer experience
+      technical += 30
+      community += 25
+      break
+    case 3: // Community and vision
+      community += 40
+      innovation += 25
+      break
+  }
+
+  // Question 2: Favorite meme/joke
+  switch (answers[1]) {
+    case 0: // Monad go brrrr
+      humor += 35
+      technical += 20
+      break
+    case 1: // When other chains are slow
+      humor += 30
+      technical += 25
+      break
+    case 2: // Parallel execution = parallel relationships
+      humor += 40
+      community += 20
+      break
+    case 3: // Making Ethereum look like dial-up
+      humor += 35
+      innovation += 20
+      break
+  }
+
+  // Question 3: Monad superpower
+  switch (answers[2]) {
+    case 0: // Time manipulation
+      innovation += 35
+      technical += 20
+      break
+    case 1: // Super speed
+      technical += 30
+      innovation += 25
+      break
+    case 2: // Mind reading
+      community += 35
+      innovation += 20
+      break
+    case 3: // Multiplication
+      technical += 25
+      innovation += 30
+      break
+  }
+
+  // Normalize to 0-100 scale and add some randomness for variety
+  return {
+    technical: Math.min(100, technical + Math.random() * 20),
+    community: Math.min(100, community + Math.random() * 20),
+    innovation: Math.min(100, innovation + Math.random() * 20),
+    humor: Math.min(100, humor + Math.random() * 20)
+  }
+}
+
+// Calculate compatibility between two personality profiles
+function calculateCompatibility(userProfile: PersonalityProfile, matchProfile: PersonalityProfile): number {
+  // Calculate similarity in each dimension (closer = higher compatibility)
+  const technicalSimilarity = 100 - Math.abs(userProfile.technical - matchProfile.technical)
+  const communitySimilarity = 100 - Math.abs(userProfile.community - matchProfile.community)
+  const innovationSimilarity = 100 - Math.abs(userProfile.innovation - matchProfile.innovation)
+  const humorSimilarity = 100 - Math.abs(userProfile.humor - matchProfile.humor)
+
+  // Weighted average (you can adjust weights based on importance)
+  const compatibility = (
+    technicalSimilarity * 0.3 +
+    communitySimilarity * 0.25 +
+    innovationSimilarity * 0.25 +
+    humorSimilarity * 0.2
+  )
+
+  // Add some randomness to make it feel more natural (±10%)
+  const randomFactor = (Math.random() - 0.5) * 20
+  return Math.max(60, Math.min(99, Math.round(compatibility + randomFactor)))
+}
+
+// Generate compatibility reason based on profiles and answers
+function generateCompatibilityReason(
+  userProfile: PersonalityProfile, 
+  match: any, 
+  compatibility: number,
+  answers: number[]
+): string {
+  const reasons = []
+
+  // High compatibility reasons
+  if (compatibility >= 85) {
+    if (Math.abs(userProfile.technical - match.personality.technical) < 20) {
+      reasons.push("You both share a deep appreciation for Monad's technical excellence!")
+    }
+    if (Math.abs(userProfile.community - match.personality.community) < 20) {
+      reasons.push("Your community vibes are perfectly aligned!")
+    }
+    if (Math.abs(userProfile.innovation - match.personality.innovation) < 20) {
+      reasons.push("You both see the revolutionary potential of Monad!")
+    }
+    if (Math.abs(userProfile.humor - match.personality.humor) < 20) {
+      reasons.push("Your sense of humor about crypto is perfectly matched!")
+    }
+  }
+
+  // Medium compatibility reasons
+  if (compatibility >= 75 && compatibility < 85) {
+    reasons.push("You complement each other's Monad journey beautifully!")
+    reasons.push("Your different perspectives on Monad create perfect balance!")
+    reasons.push("You both appreciate what makes Monad special!")
+  }
+
+  // Lower compatibility but still positive
+  if (compatibility < 75) {
+    reasons.push("Opposites attract in the Monad ecosystem!")
+    reasons.push("Your different Monad interests could spark great conversations!")
+    reasons.push("Sometimes the best matches come from unexpected places!")
+  }
+
+  // Add specific interest-based reasons
+  if (match.interests.includes("DeFi") && answers[0] === 1) {
+    reasons.push("You both love Monad's DeFi potential!")
+  }
+  if (match.interests.includes("Community") && answers[0] === 3) {
+    reasons.push("Community builders unite!")
+  }
+  if (match.interests.includes("Memes") && answers[1] === 2) {
+    reasons.push("Your meme game is on point together!")
+  }
+
+  // Return a random reason or combine multiple
+  if (reasons.length === 0) {
+    return "You both believe in the future of Monad!"
+  }
+  
+  return reasons[Math.floor(Math.random() * reasons.length)]
+}
+
+// Find best match from the pool
+function findBestMatch(answers: number[]): Match {
+  const userProfile = calculatePersonalityProfile(answers)
+  
+  // Calculate compatibility with all potential matches
+  const matchesWithCompatibility = matchPool.map(match => {
+    const compatibility = calculateCompatibility(userProfile, match.personality)
+    const reason = generateCompatibilityReason(userProfile, match, compatibility, answers)
+    
+    return {
+      username: match.username,
+      compatibility,
+      reason,
+      avatar: match.avatar,
+      interests: match.interests
+    }
+  })
+
+  // Sort by compatibility and add some randomness to top matches
+  matchesWithCompatibility.sort((a, b) => b.compatibility - a.compatibility)
+  
+  // Pick from top 3 matches to add variety
+  const topMatches = matchesWithCompatibility.slice(0, 3)
+  return topMatches[Math.floor(Math.random() * topMatches.length)]
 }
 
 export default function Home() {
@@ -69,21 +323,32 @@ export default function Home() {
       setSelectedOption(null)
     } else {
       setGameState('matching')
-      // Simulate matching process
+      // Use real matching algorithm
       setTimeout(() => {
-        const mockMatch: Match = {
-          username: 'monad_dev',
-          compatibility: Math.floor(Math.random() * 20) + 80, // 80-99% compatibility
-          reason: "You both love Monad's parallel execution model. Soulmates!"
-        }
-        setMatch(mockMatch)
+        const bestMatch = findBestMatch(newAnswers)
+        setMatch(bestMatch)
         setGameState('result')
       }, 2000)
     }
   }
 
   const handleShare = () => {
-    alert('Share functionality - would post to Farcaster in production!')
+    if (match) {
+      const shareText = `I just found my MonCrush! ${match.compatibility}% compatibility with @${match.username} 💘 Find yours at MonCrush!`
+      
+      // In a real Farcaster app, this would use the Farcaster SDK
+      if (navigator.share) {
+        navigator.share({
+          title: 'MonCrush Match!',
+          text: shareText,
+          url: window.location.href
+        })
+      } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(shareText)
+        alert('Match details copied to clipboard! Share on Farcaster!')
+      }
+    }
   }
 
   const handleMintNFT = () => {
@@ -208,7 +473,7 @@ export default function Home() {
         </div>
         
         <div className="space-y-2 text-center text-sm opacity-60">
-          <div>🔍 Scanning responses...</div>
+          <div>🔍 Analyzing your personality profile...</div>
           <div>🧠 Computing compatibility scores...</div>
           <div>💫 Finding your perfect match...</div>
         </div>
@@ -225,20 +490,31 @@ export default function Home() {
           <div className="text-lg opacity-75">Compatibility</div>
         </div>
 
-        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-8">
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-center space-x-4 mb-4">
             <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-2xl">
               👤
             </div>
             <div className="text-2xl">💕</div>
             <div className="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center text-2xl">
-              {match.username[0].toUpperCase()}
+              {match.avatar}
             </div>
           </div>
           
           <div className="text-center">
             <div className="font-semibold text-lg mb-2">@{match.username}</div>
-            <div className="text-sm opacity-75 italic">"{match.reason}"</div>
+            <div className="text-sm opacity-75 italic mb-3">"{match.reason}"</div>
+            
+            <div className="flex flex-wrap justify-center gap-2">
+              {match.interests.map((interest, index) => (
+                <span 
+                  key={index}
+                  className="bg-purple-500/30 text-purple-200 px-2 py-1 rounded-full text-xs"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
