@@ -1,6 +1,8 @@
+
 'use client'
 
 import { useState } from 'react'
+import { NFTMinting } from '@/components/NFTMinting'
 
 interface Question {
   id: number
@@ -37,6 +39,36 @@ const questions: Question[] = [
       "Super speed - 10,000 TPS speaks for itself",
       "Mind reading - knowing what developers need before they ask",
       "Multiplication - turning one transaction into many simultaneously"
+    ]
+  },
+  {
+    id: 4,
+    text: "What's your ideal way to contribute to the Monad ecosystem?",
+    options: [
+      "Building innovative dApps and smart contracts",
+      "Fostering a vibrant and inclusive community",
+      "Researching and advancing blockchain scalability solutions",
+      "Creating engaging content and educational resources"
+    ]
+  },
+  {
+    id: 5,
+    text: "If you could only pick one, what's the most exciting aspect of Monad's future?",
+    options: [
+      "The potential for mass adoption and mainstream integration",
+      "The continuous innovation in parallel EVM technology",
+      "The growth of a strong, passionate global community",
+      "The emergence of groundbreaking new use cases and applications"
+    ]
+  },
+  {
+    id: 6,
+    text: "How do you prefer to stay updated on Monad news and developments?",
+    options: [
+      "Diving deep into technical documentation and whitepapers",
+      "Engaging in community discussions on Discord and Farcaster",
+      "Following official announcements and core team updates",
+      "Exploring new projects and dApps built on Monad"
     ]
   }
 ]
@@ -187,12 +219,68 @@ function calculatePersonalityProfile(answers: number[]): PersonalityProfile {
       break
   }
 
+  // Question 4: Ideal way to contribute
+  switch (answers[3]) {
+    case 0: // Building innovative dApps
+      technical += 35
+      innovation += 30
+      break
+    case 1: // Fostering community
+      community += 40
+      break
+    case 2: // Researching scalability
+      technical += 30
+      innovation += 35
+      break
+    case 3: // Creating engaging content
+      community += 25
+      humor += 20
+      break
+  }
+
+  // Question 5: Most exciting aspect of Monad's future
+  switch (answers[4]) {
+    case 0: // Mass adoption
+      community += 30
+      innovation += 25
+      break
+    case 1: // Continuous innovation in parallel EVM
+      technical += 35
+      innovation += 30
+      break
+    case 2: // Growth of community
+      community += 40
+      break
+    case 3: // Groundbreaking new use cases
+      innovation += 35
+      technical += 20
+      break
+  }
+
+  // Question 6: How to stay updated
+  switch (answers[5]) {
+    case 0: // Technical documentation
+      technical += 30
+      break
+    case 1: // Community discussions
+      community += 35
+      break
+    case 2: // Official announcements
+      community += 20
+      innovation += 15
+      break
+    case 3: // Exploring new projects
+      technical += 25
+      innovation += 20
+      break
+  }
+
   // Normalize to 0-100 scale and add some randomness for variety
   return {
-    technical: Math.min(100, technical + Math.random() * 20),
-    community: Math.min(100, community + Math.random() * 20),
-    innovation: Math.min(100, innovation + Math.random() * 20),
-    humor: Math.min(100, humor + Math.random() * 20)
+    technical: Math.min(100, technical + Math.random() * 10),
+    community: Math.min(100, community + Math.random() * 10),
+    innovation: Math.min(100, innovation + Math.random() * 10),
+    humor: Math.min(100, humor + Math.random() * 10)
   }
 }
 
@@ -265,6 +353,17 @@ function generateCompatibilityReason(
   }
   if (match.interests.includes("Memes") && answers[1] === 2) {
     reasons.push("Your meme game is on point together!")
+  }
+
+  // New question-specific reasons
+  if (answers[3] === 0 && match.interests.includes("Smart Contracts")) {
+    reasons.push("You both are passionate about building on Monad!")
+  }
+  if (answers[4] === 1 && match.interests.includes("Performance")) {
+    reasons.push("Your shared excitement for parallel EVM is electric!")
+  }
+  if (answers[5] === 1 && match.interests.includes("Community")) {
+    reasons.push("You both love staying connected with the Monad community!")
   }
 
   // Return a random reason or combine multiple
@@ -352,7 +451,7 @@ export default function Home() {
   }
 
   const handleMintNFT = () => {
-    alert('NFT minting - would mint match card on Monad for 0.01 MON!')
+    // This will be handled by the NFTMinting component
   }
 
   const handleSendMON = () => {
@@ -379,7 +478,7 @@ export default function Home() {
           <div className="space-y-3 text-sm">
             <div className="flex items-center space-x-3">
               <span className="bg-purple-500 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</span>
-              <span>Answer 3 questions about Monad</span>
+              <span>Answer 6 questions about Monad</span>
             </div>
             <div className="flex items-center space-x-3">
               <span className="bg-purple-500 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
@@ -527,13 +626,14 @@ export default function Home() {
           </button>
           
           <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={handleMintNFT}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-full text-sm transition-all duration-200"
-            >
-              💜 Mint NFT
-              <div className="text-xs opacity-75">0.01 MON</div>
-            </button>
+            <div className="space-y-2">
+              <NFTMinting 
+                match={match} 
+                onSuccess={() => {
+                  // Could add success handling here
+                }}
+              />
+            </div>
             
             <button
               onClick={handleSendMON}
@@ -565,4 +665,6 @@ export default function Home() {
 
   return null
 }
+
+
 
