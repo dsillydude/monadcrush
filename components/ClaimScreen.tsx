@@ -1,9 +1,11 @@
+
 'use client'
 
 import { useState } from 'react'
 import { useAccount, useSendTransaction } from 'wagmi'
-import { parseEther } from 'viem'
+import { parseEther, encodeFunctionData } from 'viem'
 import { monadTestnet } from 'viem/chains'
+import { TokenTransferService, isValidClaimCode, ESCROW_CONTRACT } from '../lib/token-transfer'
 
 interface ClaimScreenProps {
   onBack: () => void
@@ -29,36 +31,25 @@ export function ClaimScreen({ onBack }: ClaimScreenProps) {
 
   // Mock claim code validation (in production, this would call your backend)
   const validateClaimCode = async (code: string): Promise<ClaimInfo> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Mock validation logic
-    if (code.length === 8 && /^[A-Z0-9]+$/.test(code)) {
-      // Generate mock claim info
-      const amounts = ['1', '5', '10', '25']
-      const senders = ['monad_dev', 'crypto_queen', 'blockchain_bae', 'defi_darling']
-      const messages = [
-        'You\'re my perfect match! 💘',
-        'Thanks for the great conversation! 🌟',
-        'Hope we can build something together! 🚀',
-        'You caught my eye in the Monad community! 👀'
-      ]
-      
+    const transferService = new TokenTransferService(null); // walletClient is not needed for read operations
+    const info = await transferService.getClaimInfo(code);
+
+    if (info) {
       return {
         isValid: true,
-        amount: amounts[Math.floor(Math.random() * amounts.length)],
-        sender: senders[Math.floor(Math.random() * senders.length)],
-        message: messages[Math.floor(Math.random() * messages.length)]
-      }
+        amount: info.amount,
+        sender: info.sender,
+        message: info.message
+      };
     } else {
       return {
         isValid: false,
         amount: '0',
         sender: '',
-        message: 'Invalid claim code'
-      }
+        message: 'Claim not found or invalid'
+      };
     }
-  }
+  };
 
   const handleCheckCode = async () => {
     if (!claimCode.trim()) {
@@ -90,21 +81,10 @@ export function ClaimScreen({ onBack }: ClaimScreenProps) {
     setError('')
 
     try {
-      // In production, this would call your smart contract to claim tokens
-      // For now, we'll simulate a successful claim
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
-      // Mock transaction (in production, use actual smart contract call)
-      // sendTransaction({
-      //   to: 'YOUR_ESCROW_CONTRACT_ADDRESS',
-      //   data: encodeFunctionData({
-      //     abi: escrowAbi,
-      //     functionName: 'claimTokens',
-      //     args: [claimCode]
-      //   })
-      // })
-      
-      setClaimSuccess(true)
+      const transferService = new TokenTransferService(null);
+      const txHash = await transferService.claimTokens(claimCode, address);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate transaction confirmation time
+      setClaimSuccess(true);
     } catch (err) {
       setError('Failed to claim tokens. Please try again.')
     } finally {
@@ -254,4 +234,6 @@ export function ClaimScreen({ onBack }: ClaimScreenProps) {
     </div>
   )
 }
+
+
 

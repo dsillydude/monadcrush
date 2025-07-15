@@ -163,7 +163,7 @@ export function RealUserProfile({ user, onClose }: RealUserProfileProps) {
                       <div className="flex justify-between items-center mb-1">
                         <span className="capitalize text-gray-700">{trait}</span>
                         <span className={`font-medium ${getPersonalityColor(score as number)}`}>
-                          {score}%
+                          {(score as number)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">

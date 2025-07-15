@@ -15,7 +15,7 @@
     "@farcaster/frame-sdk": "^0.0.55",
     "@farcaster/frame-wagmi-connector": "^0.0.44",
     "@tanstack/react-query": "^5.64.2",
-    "next": "14.2.6",
+    "next": "^14.2.30",
     "react": "^18",
     "react-dom": "^18",
     "viem": "^2.22.22",

@@ -2,7 +2,7 @@
 import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
 
 // Deployed MonadCrushEscrow contract address
-const ESCROW_CONTRACT_ADDRESS = '0x4B31DE862cB7CD81d9738E71F57f76F5341224b9'
+const ESCROW_CONTRACT_ADDRESS = '0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37'
 const WMON_TOKEN_ADDRESS = '0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701'
 
 // Monad Testnet chain configuration
@@ -32,19 +32,123 @@ const monadTestnet = {
 const ESCROW_ABI = [
   {
     "inputs": [
-      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"},
-      {"internalType": "uint256", "name": "_amount", "type": "uint256"},
-      {"internalType": "address", "name": "_recipient", "type": "address"},
-      {"internalType": "string", "name": "_message", "type": "string"}
+      {
+        "internalType": "address",
+        "name": "_monTokenAddress",
+        "type": "address"
+      }
     ],
-    "name": "createClaim",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "inputs": [
-      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"}
+      {
+        "internalType": "address",
+        "name": "owner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableInvalidOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "OwnableUnauthorizedAccount",
+    "type": "error"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimCodeHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "ClaimCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "claimCodeHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "fallback"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_claimCodeHash",
+        "type": "bytes32"
+      }
     ],
     "name": "claimTokens",
     "outputs": [],
@@ -53,18 +157,172 @@ const ESCROW_ABI = [
   },
   {
     "inputs": [
-      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"}
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
     ],
-    "name": "getClaimInfo",
+    "name": "claims",
     "outputs": [
-      {"internalType": "uint256", "name": "amount", "type": "uint256"},
-      {"internalType": "address", "name": "recipient", "type": "address"},
-      {"internalType": "bool", "name": "claimed", "type": "bool"},
-      {"internalType": "string", "name": "message", "type": "string"},
-      {"internalType": "address", "name": "sender", "type": "address"}
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_claimCodeHash",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_message",
+        "type": "string"
+      }
+    ],
+    "name": "createClaim",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "_claimCodeHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "getClaimInfo",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "claimed",
+        "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "message",
+        "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "monToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_tokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "withdrawStuckTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ] as const
 
@@ -184,7 +442,7 @@ export class TokenTransferService {
       const [amount, recipient, claimed, message, sender] = result
 
       // Check if claim exists (amount > 0)
-      if (amount === 0n) {
+      if (amount === BigInt(0)) {
         return null
       }
 
@@ -314,4 +572,32 @@ export async function getClaim(claimCode: string): Promise<{
     claimed: false
   }
 }
+
+
+// Export the contract configuration for use in components
+export const ESCROW_CONTRACT = {
+  address: ESCROW_CONTRACT_ADDRESS as `0x${string}`,
+  abi: ESCROW_ABI
+}
+
+
+
+// Add this to your token-transfer.ts for testing
+export async function testContractConnection(publicClient: any) {
+  try {
+    const owner = await publicClient.readContract({
+      address: ESCROW_CONTRACT.address,
+      abi: ESCROW_CONTRACT.abi,
+      functionName: 'owner'
+    })
+    
+    console.log("Contract owner:", owner)
+    console.log("Contract connection successful!")
+    return true
+  } catch (error) {
+    console.error("Contract connection failed:", error)
+    return false
+  }
+}
+
 
