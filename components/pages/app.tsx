@@ -2,8 +2,15 @@
 'use client'
 
 import { useState } from 'react'
-import { NFTMinting } from '@/components/NFTMinting'
-import { MONTransfer } from '@/components/MONTransfer'
+import { NFTMinting } from '../NFTMinting'
+import { MONTransfer } from '../MONTransfer'
+import { RealUserProfile } from '../RealUserProfile'
+import { WalletConnection } from '../WalletConnection'
+import { MockWalletConnection } from '../MockWalletConnection'
+import { ClaimScreen } from '../ClaimScreen'
+import { useRealMatching } from '../../lib/real-matching'
+import { useAccount } from 'wagmi'
+import { monadTestnet } from 'viem/chains'
 
 interface Question {
   id: number
@@ -405,14 +412,26 @@ export default function Home() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<number[]>([])
   const [selectedOption, setSelectedOption] = useState<number | null>(null)
-  const [gameState, setGameState] = useState<'intro' | 'questions' | 'matching' | 'result'>('intro')
+  const [gameState, setGameState] = useState<'wallet' | 'intro' | 'claim' | 'questions' | 'matching' | 'result'>('wallet')
   const [match, setMatch] = useState<Match | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
+  
+  // Wallet connection
+  const { isConnected, chainId } = useAccount()
+  const isWalletReady = isConnected && chainId === monadTestnet.id
+  
+  // Real matching integration
+  const { findRealMatch, isLoading: matchingLoading, error: matchingError } = useRealMatching()
+
+  const handleWalletConnected = () => {
+    setGameState('intro')
+  }
 
   const handleStartGame = () => {
     setGameState('questions')
   }
 
-  const handleAnswerSubmit = () => {
+  const handleAnswerSubmit = async () => {
     if (selectedOption === null) return
     
     const newAnswers = [...answers, selectedOption]
@@ -423,12 +442,19 @@ export default function Home() {
       setSelectedOption(null)
     } else {
       setGameState('matching')
-      // Use real matching algorithm
-      setTimeout(() => {
+      
+      try {
+        // Try to find a real match first
+        const realMatch = await findRealMatch(newAnswers)
+        setMatch(realMatch)
+        setGameState('result')
+      } catch (error) {
+        console.error('Real matching failed, using fallback:', error)
+        // Fallback to original algorithm
         const bestMatch = findBestMatch(newAnswers)
         setMatch(bestMatch)
         setGameState('result')
-      }, 2000)
+      }
     }
   }
 
@@ -453,6 +479,37 @@ export default function Home() {
 
   const handleMintNFT = () => {
     // This will be handled by the NFTMinting component
+  }
+
+  // Auto-advance if wallet is already connected
+  if (gameState === 'wallet' && isWalletReady) {
+    setGameState('intro')
+  }
+
+  if (gameState === 'wallet') {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 space-y-8 bg-gradient-to-br from-purple-900 to-pink-900 text-white">
+        <div className="bg-yellow-500/20 border border-yellow-500 rounded-lg p-3 mb-4 text-center text-sm">
+          🚧 Development Mode - Use in Farcaster app for full functionality
+        </div>
+        
+        <div className="text-center space-y-4">
+          <h1 className="text-4xl font-bold">💘 MonCrush</h1>
+          <p className="text-lg opacity-90">
+            Find your perfect match through code, vibes, and a little onchain fate.
+          </p>
+        </div>
+        
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 max-w-md">
+          <h2 className="text-xl font-semibold mb-4 text-center">Connect Your Wallet</h2>
+          <p className="text-sm opacity-75 mb-6 text-center">
+            Connect to Monad Testnet to play MonadCrush and claim MON from your crushes
+          </p>
+          
+          <MockWalletConnection onConnected={handleWalletConnected} />
+        </div>
+      </div>
+    )
   }
 
   if (gameState === 'intro') {
@@ -487,14 +544,27 @@ export default function Home() {
           </div>
         </div>
 
-        <button
-          onClick={handleStartGame}
-          className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-200 transform hover:scale-105"
-        >
-          Find My MonCrush 💘
-        </button>
+        <div className="space-y-4">
+          <button
+            onClick={handleStartGame}
+            className="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-200 transform hover:scale-105"
+          >
+            Find My MonCrush 💘
+          </button>
+          
+          <button
+            onClick={() => setGameState('claim')}
+            className="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-full text-base transition-all duration-200 transform hover:scale-105"
+          >
+            Claim MON from Your Crush 💝
+          </button>
+        </div>
       </div>
     )
+  }
+
+  if (gameState === 'claim') {
+    return <ClaimScreen onBack={() => setGameState('intro')} />
   }
 
   if (gameState === 'questions') {
@@ -600,7 +670,7 @@ export default function Home() {
             <div className="font-semibold text-lg mb-2">@{match.username}</div>
             <div className="text-sm opacity-75 italic mb-3">"{match.reason}"</div>
             
-            <div className="flex flex-wrap justify-center gap-2">
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
               {match.interests.map((interest, index) => (
                 <span 
                   key={index}
@@ -610,6 +680,14 @@ export default function Home() {
                 </span>
               ))}
             </div>
+            
+            {/* View Profile Button */}
+            <button
+              onClick={() => setShowProfile(true)}
+              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm transition-colors duration-200"
+            >
+              👤 View Full Profile
+            </button>
           </div>
         </div>
 
@@ -657,6 +735,14 @@ export default function Home() {
             🔄 Play Again Tomorrow
           </button>
         </div>
+        
+        {/* Profile Modal */}
+        {showProfile && match && (
+          <RealUserProfile 
+            user={match} 
+            onClose={() => setShowProfile(false)} 
+          />
+        )}
       </div>
     )
   }

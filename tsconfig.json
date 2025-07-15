@@ -1,26 +1,47 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "noEmit": true,
+    "target": "es2020",
+    "module": "commonjs",
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
+    "outDir": "./dist",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "moduleResolution": "node",
     "isolatedModules": true,
     "jsx": "preserve",
-    "incremental": true,
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./*"]
-    }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./hardhat.config.ts",
+    "./scripts",
+    "./test",
+    "./contracts",
+    ".next/types/**/*.ts"
+  ],
+  "files": [
+    "./node_modules/@nomicfoundation/hardhat-ethers/internal/type-extensions.d.ts",
+    "./node_modules/@nomicfoundation/hardhat-network-helpers/internal/type-extensions.d.ts",
+    "./node_modules/@nomicfoundation/hardhat-chai-matchers/internal/type-extensions.d.ts",
+    "./node_modules/@nomicfoundation/hardhat-verify/internal/type-extensions.d.ts",
+    "./node_modules/@nomicfoundation/hardhat-web3/internal/type-extensions.d.ts",
+    "./node_modules/@typechain/hardhat/dist/type-extensions.d.ts",
+    "./node_modules/@typechain/ethers-v6/dist/index.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

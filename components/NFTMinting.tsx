@@ -3,8 +3,8 @@ import { useAccount, useWriteContract, useSwitchChain, useConnect } from 'wagmi'
 import { parseEther } from 'viem'
 import { monadTestnet } from 'viem/chains'
 import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
-import { useFrame } from '@/components/farcaster-provider'
-import { MONADCRUSH_NFT_CONTRACT, generateMatchNFTMetadata, uploadToIPFS } from '@/lib/nft-contract'
+import { useFrame } from './farcaster-provider'
+import { MONADCRUSH_NFT_CONTRACT, generateMatchNFTMetadata, uploadToIPFS } from '../lib/nft-contract'
 
 interface Match {
   username: string

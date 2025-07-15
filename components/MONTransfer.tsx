@@ -1,18 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useAccount, useWriteContract, useSwitchChain, useConnect } from 'wagmi'
-import { parseEther } from 'viem'
-import { monadTestnet } from 'viem/chains'
-import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
-import { useFrame } from '@/components/farcaster-provider'
-import { 
-  ESCROW_CONTRACT, 
-  generateClaimCode, 
-  MON_SEND_AMOUNTS, 
-  formatMONAmount,
-  storeClaim
-} from '@/lib/token-transfer'
+import { useAccount, useWalletClient } from 'wagmi'
+import { TokenTransferService, MON_SEND_AMOUNTS, formatMONAmount } from '../lib/token-transfer'
 
 interface Match {
   username: string
@@ -33,32 +23,21 @@ export function MONTransfer({ match, onSuccess }: MONTransferProps) {
   const [selectedAmount, setSelectedAmount] = useState('5')
   const [customAmount, setCustomAmount] = useState('')
   const [claimCode, setClaimCode] = useState('')
+  const [txHash, setTxHash] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [showAmountSelector, setShowAmountSelector] = useState(false)
   
-  const { isEthProviderAvailable } = useFrame()
-  const { isConnected, address, chainId } = useAccount()
-  const { connect } = useConnect()
-  const { switchChain } = useSwitchChain()
-  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { isConnected, address } = useAccount()
+  const { data: walletClient } = useWalletClient()
 
   const getActualAmount = () => {
     return selectedAmount === 'custom' ? customAmount : selectedAmount
   }
 
   const handleSendMON = async () => {
-    if (!isConnected) {
-      if (isEthProviderAvailable) {
-        connect({ connector: farcasterFrame() })
-      } else {
-        setErrorMessage('Wallet connection only available via Warpcast')
-        setTransferStatus('error')
-      }
-      return
-    }
-
-    if (chainId !== monadTestnet.id) {
-      switchChain({ chainId: monadTestnet.id })
+    if (!isConnected || !address || !walletClient) {
+      setErrorMessage('Please connect your wallet')
+      setTransferStatus('error')
       return
     }
 
@@ -74,30 +53,25 @@ export function MONTransfer({ match, onSuccess }: MONTransferProps) {
       setTransferStatus('creating')
       setErrorMessage('')
 
-      // Generate unique claim code
-      const newClaimCode = generateClaimCode()
-      setClaimCode(newClaimCode)
-
-      // Create escrow claim
-      writeContract({
-        address: ESCROW_CONTRACT.address,
-        abi: ESCROW_CONTRACT.abi,
-        functionName: 'createClaim',
-        args: [newClaimCode, parseEther(amount), match.username],
-        value: parseEther(amount) // Send MON to escrow
-      })
-
-      // Store claim data (in production, this would be a backend call)
-      await storeClaim({
-        claimCode: newClaimCode,
+      const transferService = new TokenTransferService(walletClient)
+      
+      // For demo purposes, we'll use a placeholder recipient address
+      // In production, this would be the actual recipient's wallet address
+      const recipientAddress = '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d1b5' // Placeholder
+      
+      const personalMessage = `You caught my eye in the Monad community! 💝 Compatibility: ${match.compatibility}%`
+      
+      const result = await transferService.createClaim(
         amount,
-        senderAddress: address!,
-        recipientUsername: match.username,
-        matchData: match
-      })
+        recipientAddress,
+        personalMessage,
+        address
+      )
 
+      setClaimCode(result.claimCode)
+      setTxHash(result.txHash)
       setTransferStatus('success')
-      onSuccess?.(newClaimCode)
+      onSuccess?.(result.claimCode)
     } catch (error) {
       console.error('MON transfer error:', error)
       setErrorMessage(error instanceof Error ? error.message : 'Failed to send MON')
@@ -109,13 +83,12 @@ export function MONTransfer({ match, onSuccess }: MONTransferProps) {
 
   const getButtonText = () => {
     if (!isConnected) return 'Connect Wallet to Send'
-    if (chainId !== monadTestnet.id) return 'Switch to Monad Testnet'
-    if (transferStatus === 'creating' || isPending) return 'Creating Claim...'
+    if (transferStatus === 'creating') return 'Creating Claim...'
     if (transferStatus === 'success') return 'MON Sent! 🎉'
     return '💜 Send MON'
   }
 
-  const isDisabled = isTransferring || isPending || transferStatus === 'success'
+  const isDisabled = isTransferring || transferStatus === 'success'
 
   if (transferStatus === 'success' && claimCode) {
     return (
@@ -140,9 +113,9 @@ export function MONTransfer({ match, onSuccess }: MONTransferProps) {
           </div>
         </div>
 
-        {hash && (
+        {txHash && (
           <button
-            onClick={() => window.open(`https://testnet.monadexplorer.com/tx/${hash}`, '_blank')}
+            onClick={() => window.open(`https://testnet.monadexplorer.com/tx/${txHash}`, '_blank')}
             className="w-full text-purple-300 hover:text-purple-200 text-xs transition-colors duration-200"
           >
             View Transaction on Explorer

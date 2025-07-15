@@ -1,71 +1,243 @@
-// MON Token transfer system with claim codes
-import { parseEther } from 'viem'
+// MON Token transfer system with real smart contract integration
+import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
 
-// MON Token contract on Monad Testnet
-export const MON_TOKEN_CONTRACT = {
-  address: '0x1234567890123456789012345678901234567890', // Placeholder MON token address
-  abi: [
-    {
-      "inputs": [
-        {"name": "to", "type": "address"},
-        {"name": "amount", "type": "uint256"}
-      ],
-      "name": "transfer",
-      "outputs": [{"name": "", "type": "bool"}],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {"name": "owner", "type": "address"}
-      ],
-      "name": "balanceOf",
-      "outputs": [{"name": "", "type": "uint256"}],
-      "stateMutability": "view",
-      "type": "function"
-    }
-  ]
-} as const
+// Deployed MonadCrushEscrow contract address
+const ESCROW_CONTRACT_ADDRESS = '0x4B31DE862cB7CD81d9738E71F57f76F5341224b9'
+const WMON_TOKEN_ADDRESS = '0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701'
 
-// Escrow contract for claim codes
-export const ESCROW_CONTRACT = {
-  address: '0x2345678901234567890123456789012345678901', // Placeholder escrow address
-  abi: [
-    {
-      "inputs": [
-        {"name": "claimCode", "type": "string"},
-        {"name": "amount", "type": "uint256"},
-        {"name": "recipient", "type": "string"}
-      ],
-      "name": "createClaim",
-      "outputs": [{"name": "", "type": "bool"}],
-      "stateMutability": "payable",
-      "type": "function"
+// Monad Testnet chain configuration
+const monadTestnet = {
+  id: 10143,
+  name: 'Monad Testnet',
+  network: 'monad-testnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'MON',
+    symbol: 'MON',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet-rpc.monad.xyz'],
     },
-    {
-      "inputs": [
-        {"name": "claimCode", "type": "string"}
-      ],
-      "name": "claimTokens",
-      "outputs": [{"name": "", "type": "bool"}],
-      "stateMutability": "nonpayable",
-      "type": "function"
+    public: {
+      http: ['https://testnet-rpc.monad.xyz'],
     },
-    {
-      "inputs": [
-        {"name": "claimCode", "type": "string"}
-      ],
-      "name": "getClaimInfo",
-      "outputs": [
-        {"name": "amount", "type": "uint256"},
-        {"name": "recipient", "type": "string"},
-        {"name": "claimed", "type": "bool"}
-      ],
-      "stateMutability": "view",
-      "type": "function"
+  },
+  blockExplorers: {
+    default: { name: 'MonadExplorer', url: 'https://testnet.monadexplorer.com' },
+  },
+}
+
+// Contract ABI for the MonadCrushEscrow
+const ESCROW_ABI = [
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"},
+      {"internalType": "uint256", "name": "_amount", "type": "uint256"},
+      {"internalType": "address", "name": "_recipient", "type": "address"},
+      {"internalType": "string", "name": "_message", "type": "string"}
+    ],
+    "name": "createClaim",
+    "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"}
+    ],
+    "name": "claimTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "bytes32", "name": "_claimCodeHash", "type": "bytes32"}
+    ],
+    "name": "getClaimInfo",
+    "outputs": [
+      {"internalType": "uint256", "name": "amount", "type": "uint256"},
+      {"internalType": "address", "name": "recipient", "type": "address"},
+      {"internalType": "bool", "name": "claimed", "type": "bool"},
+      {"internalType": "string", "name": "message", "type": "string"},
+      {"internalType": "address", "name": "sender", "type": "address"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const
+
+// WMON Token ABI (ERC20)
+const WMON_ABI = [
+  {
+    "inputs": [
+      {"internalType": "address", "name": "spender", "type": "address"},
+      {"internalType": "uint256", "name": "amount", "type": "uint256"}
+    ],
+    "name": "approve",
+    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address", "name": "account", "type": "address"}
+    ],
+    "name": "balanceOf",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const
+
+export interface ClaimInfo {
+  amount: string
+  recipient: string
+  claimed: boolean
+  message: string
+  sender: string
+}
+
+export class TokenTransferService {
+  private publicClient
+  private walletClient
+
+  constructor(walletClient: any) {
+    this.publicClient = createPublicClient({
+      chain: monadTestnet,
+      transport: http('https://testnet-rpc.monad.xyz')
+    })
+    this.walletClient = walletClient
+  }
+
+  // Generate a secure 8-character claim code
+  generateClaimCode(): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let result = ''
+    for (let i = 0; i < 8; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
     }
-  ]
-} as const
+    return result
+  }
+
+  // Create a hash from the claim code
+  hashClaimCode(claimCode: string): `0x${string}` {
+    return keccak256(toBytes(claimCode))
+  }
+
+  // Create a claim with real smart contract interaction
+  async createClaim(
+    amount: string,
+    recipientAddress: string,
+    message: string,
+    senderAddress: string
+  ): Promise<{ claimCode: string; txHash: string }> {
+    try {
+      const claimCode = this.generateClaimCode()
+      const claimCodeHash = this.hashClaimCode(claimCode)
+      const amountWei = parseEther(amount)
+
+      // First approve the escrow contract to spend WMON tokens
+      const approveTx = await this.walletClient.writeContract({
+        address: WMON_TOKEN_ADDRESS,
+        abi: WMON_ABI,
+        functionName: 'approve',
+        args: [ESCROW_CONTRACT_ADDRESS, amountWei],
+        account: senderAddress as `0x${string}`
+      })
+
+      // Wait for approval transaction
+      await this.publicClient.waitForTransactionReceipt({ hash: approveTx })
+
+      // Create the claim
+      const createClaimTx = await this.walletClient.writeContract({
+        address: ESCROW_CONTRACT_ADDRESS,
+        abi: ESCROW_ABI,
+        functionName: 'createClaim',
+        args: [claimCodeHash, amountWei, recipientAddress as `0x${string}`, message],
+        account: senderAddress as `0x${string}`
+      })
+
+      return {
+        claimCode,
+        txHash: createClaimTx
+      }
+    } catch (error) {
+      console.error('Error creating claim:', error)
+      throw new Error('Failed to create claim')
+    }
+  }
+
+  // Get claim information
+  async getClaimInfo(claimCode: string): Promise<ClaimInfo | null> {
+    try {
+      const claimCodeHash = this.hashClaimCode(claimCode)
+      
+      const result = await this.publicClient.readContract({
+        address: ESCROW_CONTRACT_ADDRESS,
+        abi: ESCROW_ABI,
+        functionName: 'getClaimInfo',
+        args: [claimCodeHash]
+      })
+
+      const [amount, recipient, claimed, message, sender] = result
+
+      // Check if claim exists (amount > 0)
+      if (amount === 0n) {
+        return null
+      }
+
+      return {
+        amount: (Number(amount) / 1e18).toString(), // Convert from wei to MON
+        recipient,
+        claimed,
+        message,
+        sender
+      }
+    } catch (error) {
+      console.error('Error getting claim info:', error)
+      return null
+    }
+  }
+
+  // Claim tokens
+  async claimTokens(claimCode: string, claimerAddress: string): Promise<string> {
+    try {
+      const claimCodeHash = this.hashClaimCode(claimCode)
+
+      const claimTx = await this.walletClient.writeContract({
+        address: ESCROW_CONTRACT_ADDRESS,
+        abi: ESCROW_ABI,
+        functionName: 'claimTokens',
+        args: [claimCodeHash],
+        account: claimerAddress as `0x${string}`
+      })
+
+      return claimTx
+    } catch (error) {
+      console.error('Error claiming tokens:', error)
+      throw new Error('Failed to claim tokens')
+    }
+  }
+
+  // Check WMON balance
+  async getWMONBalance(address: string): Promise<string> {
+    try {
+      const balance = await this.publicClient.readContract({
+        address: WMON_TOKEN_ADDRESS,
+        abi: WMON_ABI,
+        functionName: 'balanceOf',
+        args: [address as `0x${string}`]
+      })
+
+      return (Number(balance) / 1e18).toString() // Convert from wei to MON
+    } catch (error) {
+      console.error('Error getting WMON balance:', error)
+      return '0'
+    }
+  }
+}
 
 // Generate a unique claim code
 export function generateClaimCode(): string {
@@ -102,7 +274,13 @@ export function formatMONAmount(amount: string): string {
   }
 }
 
-// Mock API functions (in production, these would be real backend calls)
+// Contract addresses for easy access
+export const CONTRACT_ADDRESSES = {
+  ESCROW: ESCROW_CONTRACT_ADDRESS,
+  WMON: WMON_TOKEN_ADDRESS
+}
+
+// Mock fallback functions for development
 export async function storeClaim(claimData: {
   claimCode: string
   amount: string
@@ -110,13 +288,8 @@ export async function storeClaim(claimData: {
   recipientUsername: string
   matchData: any
 }): Promise<boolean> {
-  // In production, this would store the claim in a database
   console.log('Storing claim:', claimData)
-  
-  // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 1000))
-  
-  // Mock success
   return true
 }
 
@@ -127,13 +300,9 @@ export async function getClaim(claimCode: string): Promise<{
   matchData: any
   claimed: boolean
 } | null> {
-  // In production, this would fetch from a database
   console.log('Fetching claim:', claimCode)
-  
-  // Simulate API delay
   await new Promise(resolve => setTimeout(resolve, 500))
   
-  // Mock response (in real implementation, this would return actual data)
   return {
     amount: '5',
     senderAddress: '0x1234...5678',
