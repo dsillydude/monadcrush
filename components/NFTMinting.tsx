@@ -1,10 +1,9 @@
+'use client'
+
 import { useState } from 'react'
-import { useAccount, useWriteContract, useSwitchChain, useConnect } from 'wagmi'
-import { parseEther } from 'viem'
+import { useAccount, useWalletClient, usePublicClient } from 'wagmi'
 import { monadTestnet } from 'viem/chains'
-import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
-import { useFrame } from './farcaster-provider'
-import { MONADCRUSH_NFT_CONTRACT, generateMatchNFTMetadata, uploadToIPFS } from '../lib/nft-contract'
+import { NFTService } from '../lib/nft-contract'
 
 interface Match {
   username: string
@@ -23,26 +22,23 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
   const [isMinting, setIsMinting] = useState(false)
   const [mintStatus, setMintStatus] = useState<'idle' | 'uploading' | 'minting' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
+  const [tokenId, setTokenId] = useState<number | null>(null)
+  const [txHash, setTxHash] = useState('')
   
-  const { isEthProviderAvailable } = useFrame()
   const { isConnected, address, chainId } = useAccount()
-  const { connect } = useConnect()
-  const { switchChain } = useSwitchChain()
-  const { writeContract, data: hash, isPending } = useWriteContract()
+  const { data: walletClient } = useWalletClient()
+  const publicClient = usePublicClient()
 
   const handleMintNFT = async () => {
-    if (!isConnected) {
-      if (isEthProviderAvailable) {
-        connect({ connector: farcasterFrame() })
-      } else {
-        setErrorMessage('Wallet connection only available via Warpcast')
-        setMintStatus('error')
-      }
+    if (!isConnected || !address || !walletClient || !publicClient) {
+      setErrorMessage('Please connect your wallet')
+      setMintStatus('error')
       return
     }
 
     if (chainId !== monadTestnet.id) {
-      switchChain({ chainId: monadTestnet.id })
+      setErrorMessage('Please switch to Monad Testnet')
+      setMintStatus('error')
       return
     }
 
@@ -51,21 +47,14 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
       setMintStatus('uploading')
       setErrorMessage('')
 
-      // Generate and upload metadata
-      const metadata = generateMatchNFTMetadata(match)
-      const tokenURI = await uploadToIPFS(metadata)
-
+      const nftService = new NFTService(walletClient, publicClient)
+      
       setMintStatus('minting')
-
-      // Mint the NFT
-      writeContract({
-        address: MONADCRUSH_NFT_CONTRACT.address,
-        abi: MONADCRUSH_NFT_CONTRACT.abi,
-        functionName: 'mint',
-        args: [address!, tokenURI],
-        value: parseEther('0.01') // 0.01 MON
-      })
-
+      
+      const result = await nftService.mintMatchCard(match, address)
+      
+      setTokenId(result.tokenId)
+      setTxHash(result.txHash)
       setMintStatus('success')
       onSuccess?.()
     } catch (error) {
@@ -81,12 +70,49 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
     if (!isConnected) return 'Connect Wallet to Mint'
     if (chainId !== monadTestnet.id) return 'Switch to Monad Testnet'
     if (mintStatus === 'uploading') return 'Uploading Metadata...'
-    if (mintStatus === 'minting' || isPending) return 'Minting NFT...'
+    if (mintStatus === 'minting') return 'Minting NFT...'
     if (mintStatus === 'success') return 'NFT Minted! 🎉'
     return '💜 Mint NFT'
   }
 
-  const isDisabled = isMinting || isPending || mintStatus === 'success'
+  const isDisabled = isMinting || mintStatus === 'success'
+
+  if (mintStatus === 'success' && tokenId) {
+    return (
+      <div className="space-y-3">
+        <div className="bg-green-500/20 border border-green-400 rounded-lg p-4 text-center">
+          <div className="text-green-400 font-bold text-lg mb-2">
+            NFT Minted Successfully! 🎉
+          </div>
+          <div className="text-sm text-green-300 mb-3">
+            Match card #{tokenId} for @{match.username}
+          </div>
+          <div className="text-xs text-green-300">
+            Your MonCrush match card has been minted as an NFT!
+          </div>
+        </div>
+
+        {txHash && (
+          <button
+            onClick={() => window.open(`https://monad-testnet.socialscan.io/tx/${txHash}`, '_blank')}
+            className="w-full text-purple-300 hover:text-purple-200 text-xs transition-colors duration-200"
+          >
+            View Transaction on Explorer
+          </button>
+        )}
+
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(`I just minted my MonCrush match card NFT for @${match.username}! ${match.compatibility}% compatibility 💘`)
+            alert('Share message copied to clipboard!')
+          }}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 px-3 rounded-lg transition-colors duration-200"
+        >
+          📋 Share Your NFT
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3">
@@ -106,21 +132,6 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
       {mintStatus === 'error' && errorMessage && (
         <div className="text-red-400 text-xs text-center">
           {errorMessage}
-        </div>
-      )}
-
-      {hash && mintStatus === 'success' && (
-        <button
-          onClick={() => window.open(`https://testnet.monadexplorer.com/tx/${hash}`, '_blank')}
-          className="w-full text-purple-300 hover:text-purple-200 text-xs transition-colors duration-200"
-        >
-          View Transaction on Explorer
-        </button>
-      )}
-
-      {mintStatus === 'success' && (
-        <div className="text-center text-xs text-green-400">
-          Your MonCrush match card has been minted as an NFT! 🎉
         </div>
       )}
     </div>

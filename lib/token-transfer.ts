@@ -1,9 +1,6 @@
 // MON Token transfer system with real smart contract integration
 import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
-
-// Deployed MonadCrushEscrow contract address
-const ESCROW_CONTRACT_ADDRESS = '0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37'
-const WMON_TOKEN_ADDRESS = '0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701'
+import { CONTRACT_ADDRESSES, ESCROW_ABI, ERC20_ABI } from './contracts'
 
 // Monad Testnet chain configuration
 const monadTestnet = {
@@ -27,327 +24,6 @@ const monadTestnet = {
     default: { name: 'MonadExplorer', url: 'https://testnet.monadexplorer.com' },
   },
 }
-
-// Contract ABI for the MonadCrushEscrow
-const ESCROW_ABI = [
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_monTokenAddress",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableInvalidOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "claimCodeHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      }
-    ],
-    "name": "ClaimCreated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "claimCodeHash",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      }
-    ],
-    "name": "Claimed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "fallback"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_claimCodeHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "claimTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "name": "claims",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "claimed",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "message",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_claimCodeHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_recipient",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "_message",
-        "type": "string"
-      }
-    ],
-    "name": "createClaim",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "_claimCodeHash",
-        "type": "bytes32"
-      }
-    ],
-    "name": "getClaimInfo",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "claimed",
-        "type": "bool"
-      },
-      {
-        "internalType": "string",
-        "name": "message",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "monToken",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "owner",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "transferOwnership",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "withdrawStuckTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "stateMutability": "payable",
-    "type": "receive"
-  }
-] as const
-
-// WMON Token ABI (ERC20)
-const WMON_ABI = [
-  {
-    "inputs": [
-      {"internalType": "address", "name": "spender", "type": "address"},
-      {"internalType": "uint256", "name": "amount", "type": "uint256"}
-    ],
-    "name": "approve",
-    "outputs": [{"internalType": "bool", "name": "", "type": "bool"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {"internalType": "address", "name": "account", "type": "address"}
-    ],
-    "name": "balanceOf",
-    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  }
-] as const
 
 export interface ClaimInfo {
   amount: string
@@ -396,12 +72,16 @@ export class TokenTransferService {
       const claimCodeHash = this.hashClaimCode(claimCode)
       const amountWei = parseEther(amount)
 
-      // First approve the escrow contract to spend WMON tokens
+      // Use the production contract address for the deployed escrow
+      const escrowAddress = CONTRACT_ADDRESSES.PRODUCTION.MONAD_CRUSH_ESCROW as `0x${string}`
+      const tokenAddress = CONTRACT_ADDRESSES.MOCK_MON_TOKEN as `0x${string}` // For testing
+
+      // First approve the escrow contract to spend MON tokens
       const approveTx = await this.walletClient.writeContract({
-        address: WMON_TOKEN_ADDRESS,
-        abi: WMON_ABI,
+        address: tokenAddress,
+        abi: ERC20_ABI,
         functionName: 'approve',
-        args: [ESCROW_CONTRACT_ADDRESS, amountWei],
+        args: [escrowAddress, amountWei],
         account: senderAddress as `0x${string}`
       })
 
@@ -410,7 +90,7 @@ export class TokenTransferService {
 
       // Create the claim
       const createClaimTx = await this.walletClient.writeContract({
-        address: ESCROW_CONTRACT_ADDRESS,
+        address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'createClaim',
         args: [claimCodeHash, amountWei, recipientAddress as `0x${string}`, message],
@@ -431,13 +111,14 @@ export class TokenTransferService {
   async getClaimInfo(claimCode: string): Promise<ClaimInfo | null> {
     try {
       const claimCodeHash = this.hashClaimCode(claimCode)
+      const escrowAddress = CONTRACT_ADDRESSES.PRODUCTION.MONAD_CRUSH_ESCROW as `0x${string}`
       
       const result = await this.publicClient.readContract({
-        address: ESCROW_CONTRACT_ADDRESS,
+        address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'getClaimInfo',
         args: [claimCodeHash]
-      })
+      }) as [bigint, string, boolean, string, string]
 
       const [amount, recipient, claimed, message, sender] = result
 
@@ -463,9 +144,10 @@ export class TokenTransferService {
   async claimTokens(claimCode: string, claimerAddress: string): Promise<string> {
     try {
       const claimCodeHash = this.hashClaimCode(claimCode)
+      const escrowAddress = CONTRACT_ADDRESSES.PRODUCTION.MONAD_CRUSH_ESCROW as `0x${string}`
 
       const claimTx = await this.walletClient.writeContract({
-        address: ESCROW_CONTRACT_ADDRESS,
+        address: escrowAddress,
         abi: ESCROW_ABI,
         functionName: 'claimTokens',
         args: [claimCodeHash],
@@ -479,19 +161,21 @@ export class TokenTransferService {
     }
   }
 
-  // Check WMON balance
-  async getWMONBalance(address: string): Promise<string> {
+  // Check MON balance
+  async getMONBalance(address: string): Promise<string> {
     try {
+      const tokenAddress = CONTRACT_ADDRESSES.MOCK_MON_TOKEN as `0x${string}` // For testing
+      
       const balance = await this.publicClient.readContract({
-        address: WMON_TOKEN_ADDRESS,
-        abi: WMON_ABI,
+        address: tokenAddress,
+        abi: ERC20_ABI,
         functionName: 'balanceOf',
         args: [address as `0x${string}`]
-      })
+      }) as bigint
 
       return (Number(balance) / 1e18).toString() // Convert from wei to MON
     } catch (error) {
-      console.error('Error getting WMON balance:', error)
+      console.error('Error getting MON balance:', error)
       return '0'
     }
   }
@@ -532,12 +216,6 @@ export function formatMONAmount(amount: string): string {
   }
 }
 
-// Contract addresses for easy access
-export const CONTRACT_ADDRESSES = {
-  ESCROW: ESCROW_CONTRACT_ADDRESS,
-  WMON: WMON_TOKEN_ADDRESS
-}
-
 // Mock fallback functions for development
 export async function storeClaim(claimData: {
   claimCode: string
@@ -573,21 +251,14 @@ export async function getClaim(claimCode: string): Promise<{
   }
 }
 
-
-// Export the contract configuration for use in components
-export const ESCROW_CONTRACT = {
-  address: ESCROW_CONTRACT_ADDRESS as `0x${string}`,
-  abi: ESCROW_ABI
-}
-
-
-
-// Add this to your token-transfer.ts for testing
+// Test contract connection
 export async function testContractConnection(publicClient: any) {
   try {
+    const escrowAddress = CONTRACT_ADDRESSES.PRODUCTION.MONAD_CRUSH_ESCROW as `0x${string}`
+    
     const owner = await publicClient.readContract({
-      address: ESCROW_CONTRACT.address,
-      abi: ESCROW_CONTRACT.abi,
+      address: escrowAddress,
+      abi: ESCROW_ABI,
       functionName: 'owner'
     })
     
@@ -599,5 +270,4 @@ export async function testContractConnection(publicClient: any) {
     return false
   }
 }
-
 
