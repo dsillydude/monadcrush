@@ -8,7 +8,7 @@ const config: HardhatUserConfig = {
   networks: {
     monadTestnet: {
       url: process.env.MONAD_TESTNET_URL || "https://testnet-rpc.monad.xyz", // Updated to official testnet RPC
-      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      accounts: ["ee0df329ba3bce81c1684044b795d6563a2d13849904ddf0f8b2c48f717fece3"],
     },
   },
   // etherscan configuration commented out until Monad Testnet Chain ID and Explorer API are confirmed

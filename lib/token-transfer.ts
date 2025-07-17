@@ -1,11 +1,9 @@
 // MON Token transfer system with real smart contract integration
 import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
 
-
-
 // Deployed MonadCrushEscrow contract address
 const ESCROW_CONTRACT_ADDRESS = '0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37'
-const WMON_TOKEN_ADDRESS = '0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701'
+const MON_TOKEN_ADDRESS = '0xa305f4B300930bE60A7C1C324841c90ea074d0BA' // Updated with provided MON token address
 
 // Monad Testnet chain configuration
 const monadTestnet = {
@@ -328,8 +326,8 @@ const ESCROW_ABI = [
   }
 ] as const
 
-// WMON Token ABI (ERC20)
-const WMON_ABI = [
+// MON Token ABI (ERC20)
+const MON_ABI = [
   {
     "inputs": [
       {"internalType": "address", "name": "spender", "type": "address"},
@@ -345,6 +343,16 @@ const WMON_ABI = [
       {"internalType": "address", "name": "account", "type": "address"}
     ],
     "name": "balanceOf",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"internalType": "address", "name": "owner", "type": "address"},
+      {"internalType": "address", "name": "spender", "type": "address"}
+    ],
+    "name": "allowance",
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
     "stateMutability": "view",
     "type": "function"
@@ -398,10 +406,10 @@ export class TokenTransferService {
       const claimCodeHash = this.hashClaimCode(claimCode)
       const amountWei = parseEther(amount)
 
-      // First approve the escrow contract to spend WMON tokens
+      // First approve the escrow contract to spend MON tokens
       const approveTx = await this.walletClient.writeContract({
-        address: WMON_TOKEN_ADDRESS,
-        abi: WMON_ABI,
+        address: MON_TOKEN_ADDRESS,
+        abi: MON_ABI,
         functionName: 'approve',
         args: [ESCROW_CONTRACT_ADDRESS, amountWei],
         account: senderAddress as `0x${string}`
@@ -481,19 +489,19 @@ export class TokenTransferService {
     }
   }
 
-  // Check WMON balance
-  async getWMONBalance(address: string): Promise<string> {
+  // Check MON balance
+  async getMONBalance(address: string): Promise<string> {
     try {
       const balance = await this.publicClient.readContract({
-        address: WMON_TOKEN_ADDRESS,
-        abi: WMON_ABI,
+        address: MON_TOKEN_ADDRESS,
+        abi: MON_ABI,
         functionName: 'balanceOf',
         args: [address as `0x${string}`]
       })
 
       return (Number(balance) / 1e18).toString() // Convert from wei to MON
     } catch (error) {
-      console.error('Error getting WMON balance:', error)
+      console.error('Error getting MON balance:', error)
       return '0'
     }
   }
@@ -537,52 +545,14 @@ export function formatMONAmount(amount: string): string {
 // Contract addresses for easy access
 export const CONTRACT_ADDRESSES = {
   ESCROW: ESCROW_CONTRACT_ADDRESS,
-  WMON: WMON_TOKEN_ADDRESS
+  MON: MON_TOKEN_ADDRESS
 }
-
-// Mock fallback functions for development
-export async function storeClaim(claimData: {
-  claimCode: string
-  amount: string
-  senderAddress: string
-  recipientUsername: string
-  matchData: any
-}): Promise<boolean> {
-  console.log('Storing claim:', claimData)
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  return true
-}
-
-export async function getClaim(claimCode: string): Promise<{
-  amount: string
-  senderAddress: string
-  recipientUsername: string
-  matchData: any
-  claimed: boolean
-} | null> {
-  console.log('Fetching claim:', claimCode)
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  return {
-    amount: '5',
-    senderAddress: '0x1234...5678',
-    recipientUsername: 'crypto_queen',
-    matchData: {
-      compatibility: 85,
-      reason: 'You both love Monad!'
-    },
-    claimed: false
-  }
-}
-
 
 // Export the contract configuration for use in components
 export const ESCROW_CONTRACT = {
   address: ESCROW_CONTRACT_ADDRESS as `0x${string}`,
   abi: ESCROW_ABI
 }
-
-
 
 // Add this to your token-transfer.ts for testing
 export async function testContractConnection(publicClient: any) {
@@ -606,5 +576,4 @@ export async function testContractConnection(publicClient: any) {
 export function hashClaimCode(claimCode: string): `0x${string}` {
   return keccak256(toBytes(claimCode))
 }
-
 

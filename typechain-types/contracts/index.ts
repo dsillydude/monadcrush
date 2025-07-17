@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export type { MonadCrushEscrow } from "./MonadCrushEscrow";
+export type { MonadCrushNFT } from "./MonadCrushNFT";

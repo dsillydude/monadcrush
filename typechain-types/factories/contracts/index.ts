@@ -2,3 +2,4 @@
 /* tslint:disable */
 /* eslint-disable */
 export { MonadCrushEscrow__factory } from "./MonadCrushEscrow__factory";
+export { MonadCrushNFT__factory } from "./MonadCrushNFT__factory";
