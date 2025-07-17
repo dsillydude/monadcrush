@@ -1,6 +1,8 @@
 // MON Token transfer system with real smart contract integration
 import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
 
+
+
 // Deployed MonadCrushEscrow contract address
 const ESCROW_CONTRACT_ADDRESS = '0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37'
 const WMON_TOKEN_ADDRESS = '0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701'
@@ -598,6 +600,11 @@ export async function testContractConnection(publicClient: any) {
     console.error("Contract connection failed:", error)
     return false
   }
+}
+
+// Add this function to token-transfer.ts
+export function hashClaimCode(claimCode: string): `0x${string}` {
+  return keccak256(toBytes(claimCode))
 }
 
 

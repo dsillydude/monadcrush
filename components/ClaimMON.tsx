@@ -9,7 +9,8 @@ import {
   ESCROW_CONTRACT, 
   isValidClaimCode, 
   formatMONAmount,
-  getClaim
+  getClaim,
+  hashClaimCode // Add this import
 } from '@/lib/token-transfer'
 
 export function ClaimMON() {
@@ -85,7 +86,8 @@ export function ClaimMON() {
         address: ESCROW_CONTRACT.address,
         abi: ESCROW_CONTRACT.abi,
         functionName: 'claimTokens',
-        args: [claimCode]
+        args: [hashClaimCode(claimCode)]
+
       })
 
       setClaimStatus('success')
