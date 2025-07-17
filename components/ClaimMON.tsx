@@ -5,6 +5,7 @@ import { useAccount, useWriteContract, useSwitchChain, useConnect } from 'wagmi'
 import { monadTestnet } from 'viem/chains'
 import { farcasterFrame } from '@farcaster/frame-wagmi-connector'
 import { useFrame } from '@/components/farcaster-provider'
+import { keccak256, toBytes } from 'viem'
 import { 
   ESCROW_CONTRACT, 
   isValidClaimCode, 
@@ -80,12 +81,15 @@ export function ClaimMON() {
       setClaimStatus('claiming')
       setErrorMessage('')
 
+      // Hash the claim code to bytes32 format required by smart contract
+      const claimCodeHash = keccak256(toBytes(claimCode))
+
       // Claim tokens from escrow
       writeContract({
         address: ESCROW_CONTRACT.address,
         abi: ESCROW_CONTRACT.abi,
         functionName: 'claimTokens',
-        args: [claimCode]
+        args: [claimCodeHash]
       })
 
       setClaimStatus('success')
@@ -197,4 +201,3 @@ export function ClaimMON() {
     </div>
   )
 }
-
