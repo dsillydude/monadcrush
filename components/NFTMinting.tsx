@@ -22,7 +22,8 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
   const [isMinting, setIsMinting] = useState(false)
   const [mintStatus, setMintStatus] = useState<'idle' | 'uploading' | 'minting' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
-  const [tokenId, setTokenId] = useState<number | null>(null)
+  const [tokenId, setTokenId] = useState<string | null>(null)
+
   const [txHash, setTxHash] = useState('')
   
   const { isConnected, address, chainId } = useAccount()
@@ -53,7 +54,8 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
       
       const result = await nftService.mintMatchCard(match, address)
       
-      setTokenId(Number(result.tokenId)) // Convert string to number
+      setTokenId(Number(result.tokenId))
+// Convert string to number
       setTxHash(result.txHash)
       setMintStatus('success')
       onSuccess?.()
