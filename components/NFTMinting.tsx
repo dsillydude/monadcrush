@@ -53,7 +53,7 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
       
       const result = await nftService.mintMatchCard(match, address)
       
-      setTokenId(result.tokenId)
+      setTokenId(Number(result.tokenId)) // Convert string to number
       setTxHash(result.txHash)
       setMintStatus('success')
       onSuccess?.()
@@ -94,7 +94,7 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
 
         {txHash && (
           <button
-            onClick={() => window.open(`https://monad-testnet.socialscan.io/tx/${txHash}`, '_blank')}
+            onClick={() => window.open(`https://monad-testnet.socialscan.io/tx/${txHash}`, '_blank' )}
             className="w-full text-purple-300 hover:text-purple-200 text-xs transition-colors duration-200"
           >
             View Transaction on Explorer
@@ -137,4 +137,3 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
     </div>
   )
 }
-
