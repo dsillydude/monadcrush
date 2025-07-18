@@ -1,4 +1,3 @@
-// MON Token transfer system with real smart contract integration
 import { createPublicClient, createWalletClient, http, parseEther, keccak256, toBytes } from 'viem'
 import { CONTRACT_ADDRESSES, ESCROW_ABI, ERC20_ABI } from './contracts'
 
@@ -37,10 +36,10 @@ export class TokenTransferService {
   private publicClient
   private walletClient
 
-  constructor(walletClient: any) {
+  constructor(walletClient: any ) {
     this.publicClient = createPublicClient({
       chain: monadTestnet,
-      transport: http('https://testnet-rpc.monad.xyz')
+      transport: http('https://testnet-rpc.monad.xyz' )
     })
     this.walletClient = walletClient
   }
@@ -74,7 +73,7 @@ export class TokenTransferService {
 
       // Use the production contract address for the deployed escrow
       const escrowAddress = CONTRACT_ADDRESSES.PRODUCTION.MONAD_CRUSH_ESCROW as `0x${string}`
-      const tokenAddress = CONTRACT_ADDRESSES.MOCK_MON_TOKEN as `0x${string}` // For testing
+      const tokenAddress = CONTRACT_ADDRESSES.PRODUCTION.MON_TOKEN as `0x${string}` // Use PRODUCTION MON_TOKEN
 
       // First approve the escrow contract to spend MON tokens
       const approveTx = await this.walletClient.writeContract({
@@ -164,7 +163,7 @@ export class TokenTransferService {
   // Check MON balance
   async getMONBalance(address: string): Promise<string> {
     try {
-      const tokenAddress = CONTRACT_ADDRESSES.MOCK_MON_TOKEN as `0x${string}` // For testing
+      const tokenAddress = CONTRACT_ADDRESSES.PRODUCTION.MON_TOKEN as `0x${string}` // Use PRODUCTION MON_TOKEN
       
       const balance = await this.publicClient.readContract({
         address: tokenAddress,
@@ -270,4 +269,3 @@ export async function testContractConnection(publicClient: any) {
     return false
   }
 }
-
