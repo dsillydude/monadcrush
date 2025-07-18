@@ -54,8 +54,8 @@ export function NFTMinting({ match, onSuccess }: NFTMintingProps) {
       
       const result = await nftService.mintMatchCard(match, address)
       
-      setTokenId(Number(result.tokenId))
-// Convert string to number
+      setTokenId(result.tokenId)
+
       setTxHash(result.txHash)
       setMintStatus('success')
       onSuccess?.()
