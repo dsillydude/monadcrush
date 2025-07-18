@@ -1,14 +1,14 @@
 export const CONTRACT_ADDRESSES = {
   // Local development addresses (update these for production)
-  MOCK_MON_TOKEN: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  MONAD_CRUSH_ESCROW: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-  MONAD_CRUSH_NFT: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+  MOCK_MON_TOKEN: "0x28f847A5B03584fE8bcfeD577DBdfEb069D10d35",
+  MONAD_CRUSH_ESCROW: "0xF037de6b19531158eC7aF12bf3D7b28BaB23eAB6",
+  MONAD_CRUSH_NFT: "0x541a17CAb03f6D9A1011Cbf2F34503Ac4615Ce25",
   
   // Production addresses (replace with actual deployed addresses)
   PRODUCTION: {
-    MON_TOKEN: "0x...", // Replace with actual MON token address on Monad Testnet
-    MONAD_CRUSH_ESCROW: "0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37", // User's deployed contract
-    MONAD_CRUSH_NFT: "0x...", // Replace with actual NFT contract address
+    MON_TOKEN: "0x760AfE86e5de5fa0Ee542fc7B7B713e1c5425701", // Official WMON token address on Monad Testnet
+    MONAD_CRUSH_ESCROW: "0x9EBbaB2aCc5641d2a0B2492865B6C300B134cd37", // User's original deployed contract
+    MONAD_CRUSH_NFT: "0x541a17CAb03f6D9A1011Cbf2F34503Ac4615Ce25", // Your newly deployed NFT contract address
   }
 };
 
@@ -30,7 +30,7 @@ export const NFT_MINT_PRICE = "0.01"; // MON tokens
 
 // ABI fragments for contract interaction
 export const ESCROW_ABI = [
-  "function createClaim(bytes32 claimCodeHash, uint256 amount, address recipient, string memory message) external",
+  "function createClaim(bytes32 claimCodeHash, uint256 amount, address recipient, string memory message ) external",
   "function claimTokens(bytes32 claimCodeHash) external",
   "function getClaimInfo(bytes32 claimCodeHash) external view returns (uint256 amount, address recipient, bool claimed, string memory message, address sender)",
   "event ClaimCreated(bytes32 indexed claimCodeHash, uint256 amount, address recipient, address sender)",
@@ -50,4 +50,3 @@ export const ERC20_ABI = [
   "function transfer(address to, uint256 amount) external returns (bool)",
   "function allowance(address owner, address spender) external view returns (uint256)"
 ];
-

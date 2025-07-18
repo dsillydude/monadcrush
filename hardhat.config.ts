@@ -19,7 +19,7 @@ const config: HardhatUserConfig = {
   //   customChains: [
   //     {
   //       network: "monadTestnet",
-  //       chainId: 80001, // This needs to be the actual Monad Testnet Chain ID
+  //       chainId: 10143, // This needs to be the actual Monad Testnet Chain ID
   //       urls: {
   //         apiURL: "https://explorer.monad.xyz/api", // Replace with actual Monad Explorer API URL
   //         browserURL: "https://explorer.monad.xyz", // Replace with actual Monad Explorer URL
